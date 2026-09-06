@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from html import escape
+
 import pandas as pd
 import streamlit as st
 
@@ -204,6 +206,44 @@ def model_economics_table(result: dict, base: BaseInputs) -> pd.DataFrame:
     return table
 
 
+def model_economics_html(table: pd.DataFrame) -> str:
+    headers = "".join(f"<th>{escape(column)}</th>" for column in table.columns)
+    rows = []
+    for row in table.itertuples(index=False):
+        cells = "".join(f"<td>{escape(str(value))}</td>" for value in row)
+        rows.append(f"<tr>{cells}</tr>")
+    return f"""
+<style>
+.model-econ-table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.25rem;
+    line-height: 1.3;
+}}
+.model-econ-table th,
+.model-econ-table td {{
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.65rem 0.8rem;
+    text-align: right;
+    vertical-align: middle;
+}}
+.model-econ-table th:first-child,
+.model-econ-table td:first-child {{
+    text-align: left;
+    font-weight: 600;
+}}
+.model-econ-table th {{
+    color: #374151;
+    font-weight: 700;
+}}
+</style>
+<table class="model-econ-table">
+    <thead><tr>{headers}</tr></thead>
+    <tbody>{''.join(rows)}</tbody>
+</table>
+"""
+
+
 current_tab, model_tab = st.tabs(["1 · Existing workflow", "2 · Add nurse + MD models"])
 
 with current_tab:
@@ -272,4 +312,4 @@ with model_tab:
         st.graphviz_chart(model_workflow_graph(modeled), use_container_width=True)
 
     st.markdown("#### Model economics")
-    st.dataframe(model_economics_table(modeled, base_m), use_container_width=True, hide_index=True)
+    st.markdown(model_economics_html(model_economics_table(modeled, base_m)), unsafe_allow_html=True)
