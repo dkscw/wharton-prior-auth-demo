@@ -103,6 +103,10 @@ def simulate_current_workflow(base: BaseInputs) -> Dict[str, object]:
     client_roi = gross_savings / client_cost if client_cost else float("inf")
     vendor_profit = client_cost - review_cost
     vendor_margin = vendor_profit / client_cost if client_cost else float("nan")
+    client_cost = base.initial_cases * base.outsourced_price_per_case
+    client_roi = gross_savings / client_cost if client_cost else float("inf")
+    vendor_profit = client_cost - review_cost
+    vendor_margin = vendor_profit / client_cost if client_cost else float("nan")
 
     stages: List[Dict[str, float | str]] = [
         {"stage": "Initial cases", "cases": base.initial_cases},
@@ -184,6 +188,10 @@ def simulate_model_workflow(base: BaseInputs, model: ModelInputs) -> Dict[str, o
     gross_savings = final_denials * base.savings_per_denial
     net_savings = gross_savings - review_cost
     roi = gross_savings / review_cost if review_cost else float("inf")
+    client_cost = base.initial_cases * base.outsourced_price_per_case
+    client_roi = gross_savings / client_cost if client_cost else float("inf")
+    vendor_profit = client_cost - review_cost
+    vendor_margin = vendor_profit / client_cost if client_cost else float("nan")
 
     stages: List[Dict[str, float | str]] = [
         {"stage": "Initial cases", "cases": base.initial_cases, "appropriate": initial_app, "inappropriate": initial_inapp},
@@ -236,6 +244,10 @@ def simulate_model_workflow(base: BaseInputs, model: ModelInputs) -> Dict[str, o
         "gross_savings": gross_savings,
         "net_savings": net_savings,
         "roi": roi,
+        "client_cost": client_cost,
+        "client_roi": client_roi,
+        "vendor_profit": vendor_profit,
+        "vendor_margin": vendor_margin,
         "initial_inappropriate": initial_inapp,
         "md_model_human_reviews_avoided": md_model_human_reviews_avoided,
         "md_model_labor_saved": md_model_labor_saved,

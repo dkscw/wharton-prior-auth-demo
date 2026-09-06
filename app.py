@@ -206,6 +206,35 @@ def model_economics_table(result: dict, base: BaseInputs) -> pd.DataFrame:
     return table
 
 
+def workflow_economics_table(result: dict) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "Metric": [
+                "Gross savings from denials",
+                "RN review cost",
+                "MD review cost",
+                "Total review cost",
+                "Net value",
+                "Gross savings / review cost",
+                "Client cost",
+                "Client ROI",
+                "PA margin",
+            ],
+            "Value": [
+                money(result["gross_savings"]),
+                money(result["rn_review_cost"]),
+                money(result["md_review_cost"]),
+                money(result["review_cost"]),
+                money(result["net_savings"]),
+                f'{result["roi"]:.2f}x',
+                money(result["client_cost"]),
+                f'{result["client_roi"]:.2f}x',
+                pct(result["vendor_margin"]),
+            ],
+        }
+    )
+
+
 def model_economics_html(table: pd.DataFrame) -> str:
     headers = "".join(f"<th>{escape(column)}</th>" for column in table.columns)
     rows = []
@@ -262,17 +291,7 @@ with current_tab:
         st.dataframe(current_workflow_table(current), use_container_width=True, hide_index=True)
     with c2:
         st.markdown("#### Economics")
-        econ = pd.DataFrame(
-            {
-                "Metric": ["Gross savings from denials", "RN review cost", "MD review cost", "Total review cost", "Net value", "Gross savings / review cost", "Client cost", "Client ROI"],
-                "Value": [
-                    money(current["gross_savings"]), money(current["rn_review_cost"]), money(current["md_review_cost"]),
-                    money(current["review_cost"]), money(current["net_savings"]), f'{current["roi"]:.2f}×',
-                    money(current["client_cost"]), f'{current["client_roi"]:.2f}×',
-                ],
-            }
-        )
-        st.dataframe(econ, use_container_width=True, hide_index=True)
+        st.dataframe(workflow_economics_table(current), use_container_width=True, hide_index=True)
     st.caption("Workflow visualization")
     st.graphviz_chart(current_workflow_graph(current), use_container_width=True)
 
@@ -289,13 +308,13 @@ with model_tab:
     rn_model_col, md_model_col = st.columns(2)
     with rn_model_col:
         st.markdown("**RN model**")
-        nurse_sens = st.slider("RN model sensitivity", 50.0, 100.0, 95.0, 1.0, format="%.0f%%", key="nurse_sens") / 100
-        nurse_spec = st.slider("RN model specificity", 50.0, 100.0, 95.0, 1.0, format="%.0f%%", key="nurse_spec") / 100
+        nurse_sens = st.slider("RN model sensitivity", 0.0, 100.0, 90.0, 1.0, format="%.0f%%", key="nurse_sens") / 100
+        nurse_spec = st.slider("RN model specificity", 0.0, 100.0, 70.0, 1.0, format="%.0f%%", key="nurse_spec") / 100
 
     with md_model_col:
         st.markdown("**MD model**")
-        md_sens = st.slider("MD model sensitivity", 50.0, 100.0, 95.0, 1.0, format="%.0f%%", key="md_sens") / 100
-        md_spec = st.slider("MD model specificity", 50.0, 100.0, 95.0, 1.0, format="%.0f%%", key="md_spec") / 100
+        md_sens = st.slider("MD model sensitivity", 0.0, 100.0, 90.0, 1.0, format="%.0f%%", key="md_sens") / 100
+        md_spec = st.slider("MD model specificity", 0.0, 100.0, 70.0, 1.0, format="%.0f%%", key="md_spec") / 100
 
     model_inputs = ModelInputs(
         nurse_model_sensitivity=nurse_sens,
@@ -306,8 +325,13 @@ with model_tab:
     modeled = simulate_model_workflow(base_m, model_inputs)
 
     with st.expander("Show case flow", expanded=False):
-        st.markdown("#### Case flow")
-        st.dataframe(workflow_table(modeled), use_container_width=True, hide_index=True)
+        flow_col, econ_col = st.columns([1.35, 1])
+        with flow_col:
+            st.markdown("#### Case flow")
+            st.dataframe(workflow_table(modeled), use_container_width=True, hide_index=True)
+        with econ_col:
+            st.markdown("#### Economics")
+            st.dataframe(workflow_economics_table(modeled), use_container_width=True, hide_index=True)
         st.caption("Workflow visualization")
         st.graphviz_chart(model_workflow_graph(modeled), use_container_width=True)
 
