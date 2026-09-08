@@ -143,7 +143,7 @@ def simulate_current_workflow(base: BaseInputs) -> Dict[str, object]:
         {"stage": "RN approvals", "cases": rn_approved_total},
         {"stage": "MD reviews", "cases": md_total},
         {"stage": "MD approvals", "cases": md_approved_total},
-        {"stage": "Detected inappropriate / denied", "cases": final_denials},
+        {"stage": "Deemed inappropriate", "cases": final_denials},
     ]
 
     return {
@@ -238,7 +238,7 @@ def simulate_model_workflow(base: BaseInputs, model: ModelInputs) -> Dict[str, o
         {"stage": "MD model auto-approves", "cases": mm_autoapprove_app + mm_falseapprove_inapp, "appropriate": mm_autoapprove_app, "inappropriate": mm_falseapprove_inapp},
         {"stage": "Human MD reviews", "cases": human_md_total, "appropriate": mm_to_human_app, "inappropriate": mm_to_human_inapp},
         {"stage": "MD approves", "cases": human_md_approved, "appropriate": human_md_approved, "inappropriate": 0.0},
-        {"stage": "Final denials", "cases": final_denials, "appropriate": 0.0, "inappropriate": final_denials},
+        {"stage": "Deemed inappropriate", "cases": final_denials, "appropriate": 0.0, "inappropriate": final_denials},
     ]
 
     nurse_model_labor_saved = (nm_autoapprove_app + nm_falseapprove_inapp) * base.rn_cost

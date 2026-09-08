@@ -67,7 +67,7 @@ digraph {{
     rn_approved [label="{node_label("RN approved", result["rn_approved"])}"];
     md_review [label="{node_label("MD review", result["md_reviewed"])}"];
     md_approved [label="{node_label("MD approved", result["md_approved"])}"];
-    denied [label="{node_label("Denied", result["final_denials"])}", fillcolor="#fef2f2", color="#fca5a5"];
+    denied [label="{node_label("Deemed inappropriate", result["final_denials"])}", fillcolor="#fef2f2", color="#fca5a5"];
 
     initial -> portal [label="{portal_rate:.0%}"];
     initial -> rn_review [label="{rn_review_rate:.0%}"];
@@ -89,7 +89,7 @@ def current_inputs() -> BaseInputs:
     st.markdown("#### Economics assumptions")
     rn_cost = st.number_input("RN cost per review", 0.0, 500.0, 20.0, 5.0, key="current_rn_cost")
     md_cost = st.number_input("MD cost per review", 0.0, 1000.0, 100.0, 10.0, key="current_md_cost")
-    savings_per_denial = st.number_input("Savings per inappropriate case denied", 0.0, 100000.0, 1000.0, 100.0, key="current_save")
+    savings_per_denial = st.number_input("Savings per case deemed inappropriate", 0.0, 100000.0, 1000.0, 100.0, key="current_save")
     outsourced_price = st.number_input("Client cost per case", 0.0, 500.0, 25.0, 5.0, key="current_price")
 
     return BaseInputs(
@@ -114,7 +114,7 @@ def model_base_inputs() -> BaseInputs:
     st.markdown("#### Economics assumptions")
     rn_cost = st.number_input("RN cost per review", 0.0, 500.0, 20.0, 5.0, key="model_rn_cost")
     md_cost = st.number_input("MD cost per review", 0.0, 1000.0, 100.0, 10.0, key="model_md_cost")
-    savings_per_denial = st.number_input("Savings per inappropriate case denied", 0.0, 100000.0, 1000.0, 100.0, key="model_save")
+    savings_per_denial = st.number_input("Savings per case deemed inappropriate", 0.0, 100000.0, 1000.0, 100.0, key="model_save")
     outsourced_price = st.number_input("Client cost per case", 0.0, 500.0, 25.0, 5.0, key="model_price")
 
     return BaseInputs(
@@ -159,7 +159,7 @@ digraph {{
     md_model_approved [label="{node_label("MD model approved", result["md_model_autoapproved"])}", fillcolor="#eff6ff", color="#93c5fd"];
     md_review [label="{node_label("MD review", human_md_reviewed)}"];
     md_approved [label="{node_label("MD approved", result["human_md_approved"])}"];
-    denied [label="{node_label("Denied", result["final_denials"])}", fillcolor="#fef2f2", color="#fca5a5"];
+    denied [label="{node_label("Deemed inappropriate", result["final_denials"])}", fillcolor="#fef2f2", color="#fca5a5"];
 
     initial -> portal [label="{edge_rate(portal_approved, initial_cases)}"];
     initial -> rn_model [label="{edge_rate(rn_model_total, initial_cases)}"];
@@ -178,7 +178,7 @@ digraph {{
 def show_current_metrics(result: dict) -> None:
     a, b, c, d = st.columns(4)
     a.metric("Total cases", cases(result["initial_cases"]))
-    b.metric("Detected inappropriate / denied", cases(result["final_denials"]))
+    b.metric("Deemed inappropriate", cases(result["final_denials"]))
     c.metric("Total review cost", money(result["review_cost"]))
     d.metric("Net value", money(result["net_savings"]))
 
@@ -196,12 +196,12 @@ def model_economics_table(result: dict, base: BaseInputs) -> pd.DataFrame:
         rows,
         columns=["Model", "Cases automated", "Review cost saved", "Inappropriate cases missed"],
     )
-    table["Lost denial value"] = table["Inappropriate cases missed"] * base.savings_per_denial
-    table["Net model value"] = table["Review cost saved"] - table["Lost denial value"]
+    table["Lost deemed-inappropriate value"] = table["Inappropriate cases missed"] * base.savings_per_denial
+    table["Net model value"] = table["Review cost saved"] - table["Lost deemed-inappropriate value"]
     table["Cases automated"] = table["Cases automated"].map(cases)
     table["Review cost saved"] = table["Review cost saved"].map(money)
     table["Inappropriate cases missed"] = table["Inappropriate cases missed"].map(cases)
-    table["Lost denial value"] = table["Lost denial value"].map(money)
+    table["Lost deemed-inappropriate value"] = table["Lost deemed-inappropriate value"].map(money)
     table["Net model value"] = table["Net model value"].map(money)
     return table
 
@@ -210,7 +210,7 @@ def workflow_economics_table(result: dict) -> pd.DataFrame:
     return pd.DataFrame(
         {
             "Metric": [
-                "Gross savings from denials",
+                "Gross savings from deemed inappropriate cases",
                 "RN review cost",
                 "MD review cost",
                 "Total review cost",
@@ -279,7 +279,7 @@ with current_tab:
     st.subheader("Existing workflow: portal → RN → MD")
     st.write(
         "The default values reproduce the workbook baseline: 1,000 initial cases, 700 portal approvals, "
-        "300 RN reviews, 120 MD reviews, 60 denials, $18k review cost, and $60k gross savings."
+        "300 RN reviews, 120 MD reviews, 60 deemed inappropriate, $18k review cost, and $60k gross savings."
     )
     base = current_inputs()
     current = simulate_current_workflow(base)
