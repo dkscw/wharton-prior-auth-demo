@@ -9,6 +9,38 @@ from prior_auth.engine import BaseInputs, ModelInputs, simulate_current_workflow
 
 st.set_page_config(page_title="Prior Authorization AI Economics", page_icon="🩺", layout="wide")
 
+st.markdown(
+    """
+<style>
+html, body, [class*="css"] {
+    font-size: 19px;
+}
+.stMarkdown, .stCaption, .stText, .stDataFrame, .stMetric, .stSlider, .stNumberInput {
+    font-size: 1.08rem;
+}
+h1 {
+    font-size: 2.8rem !important;
+}
+h2 {
+    font-size: 2.25rem !important;
+}
+h3 {
+    font-size: 1.8rem !important;
+}
+h4 {
+    font-size: 1.4rem !important;
+}
+button, input, label, [data-testid="stMetricLabel"], [data-testid="stMetricValue"] {
+    font-size: 1.08rem !important;
+}
+[data-testid="stCaptionContainer"] {
+    font-size: 1rem !important;
+}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
 st.title("Prior Authorization AI: Model Metrics → Business Value")
 st.caption(
     "A teaching simulator for connecting workflow economics to model evaluation."
@@ -58,8 +90,8 @@ def current_workflow_graph(result: dict) -> str:
     return f"""
 digraph {{
     graph [rankdir=LR, bgcolor="transparent", pad="0.25", nodesep="0.7", ranksep="1.0"];
-    node [shape=box, style="rounded,filled", width=2.2, height=0.85, fixedsize=true, fontname="Helvetica", fontsize=14, color="#9ca3af", fillcolor="#f9fafb"];
-    edge [color="#9ca3af", arrowsize=0.8, fontsize=12, fontname="Helvetica"];
+    node [shape=box, style="rounded,filled", width=2.35, height=0.95, fixedsize=true, fontname="Helvetica", fontsize=18, color="#9ca3af", fillcolor="#f9fafb"];
+    edge [color="#9ca3af", arrowsize=0.8, fontsize=15, fontname="Helvetica"];
 
     initial [label="{node_label("Initial cases", result["initial_cases"])}"];
     portal [label="{node_label("Portal approved", result["portal_approved"])}"];
@@ -146,8 +178,8 @@ def model_workflow_graph(result: dict) -> str:
     return f"""
 digraph {{
     graph [rankdir=LR, bgcolor="transparent", pad="0.25", nodesep="0.7", ranksep="1.0"];
-    node [shape=box, style="rounded,filled", width=2.2, height=0.85, fixedsize=true, fontname="Helvetica", fontsize=14, color="#9ca3af", fillcolor="#f9fafb"];
-    edge [color="#9ca3af", arrowsize=0.8, fontsize=12, fontname="Helvetica"];
+    node [shape=box, style="rounded,filled", width=2.35, height=0.95, fixedsize=true, fontname="Helvetica", fontsize=18, color="#9ca3af", fillcolor="#f9fafb"];
+    edge [color="#9ca3af", arrowsize=0.8, fontsize=15, fontname="Helvetica"];
 
     initial [label="{node_label("Initial cases", initial_cases)}"];
     portal [label="{node_label("Portal approved", portal_approved)}"];
@@ -246,7 +278,7 @@ def model_economics_html(table: pd.DataFrame) -> str:
 .model-econ-table {{
     width: 100%;
     border-collapse: collapse;
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     line-height: 1.3;
 }}
 .model-econ-table th,
