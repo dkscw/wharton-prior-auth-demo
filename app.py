@@ -221,8 +221,8 @@ def model_economics_table(result: dict, base: BaseInputs) -> pd.DataFrame:
     rn_missed = result["missed_nurse_model"]
     md_missed = result["missed_md_model"]
     rows = [
-        ("RN model", rn_automated, rn_automated * base.rn_cost, rn_missed),
-        ("MD model", md_automated, md_automated * base.md_cost, md_missed),
+        ("RN model", rn_automated, result["nurse_model_labor_saved"], rn_missed),
+        ("MD model", md_automated, result["md_model_labor_saved"], md_missed),
     ]
     table = pd.DataFrame(
         rows,

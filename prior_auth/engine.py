@@ -241,7 +241,10 @@ def simulate_model_workflow(base: BaseInputs, model: ModelInputs) -> Dict[str, o
         {"stage": "Deemed inappropriate", "cases": final_denials, "appropriate": 0.0, "inappropriate": final_denials},
     ]
 
-    nurse_model_labor_saved = (nm_autoapprove_app + nm_falseapprove_inapp) * base.rn_cost
+    nurse_model_labor_saved = (
+        nm_autoapprove_app * (base.rn_cost + (1 - observed["human_rn_specificity"]) * base.md_cost)
+        + nm_falseapprove_inapp * (base.rn_cost + base.md_cost)
+    )
     nurse_model_denial_value_lost = nm_falseapprove_inapp * base.savings_per_denial
     nurse_model_incremental_value = nurse_model_labor_saved - nurse_model_denial_value_lost
 

@@ -76,9 +76,27 @@ def test_perfect_rn_model_no_op_md_model_conditions_human_rn_queue():
     assert result["human_md_approved"] == approx(0)
     assert result["final_denials"] == approx(60)
     assert result["missed_denials"] == approx(0)
-    assert result["nurse_model_autoapproved"] * base.rn_cost == approx(4800)
-    assert result["missed_nurse_model"] * base.savings_per_denial == approx(0)
-    assert result["nurse_model_autoapproved"] * base.rn_cost - result["missed_nurse_model"] * base.savings_per_denial == approx(4800)
+    assert result["nurse_model_labor_saved"] == approx(10800)
+    assert result["nurse_model_denial_value_lost"] == approx(0)
+    assert result["nurse_model_incremental_value"] == approx(10800)
+
+
+def test_rn_model_false_approval_avoids_rn_and_md_review_but_loses_denial_value():
+    base = BaseInputs()
+    result = simulate_model_workflow(
+        base,
+        ModelInputs(
+            nurse_model_sensitivity=1 - 1 / 60,
+            nurse_model_specificity=0.0,
+            md_model_sensitivity=1.0,
+            md_model_specificity=0.0,
+        ),
+    )
+    assert result["nurse_model_falseapproved_inappropriate"] == approx(1)
+    assert result["nurse_model_autoapproved"] == approx(1)
+    assert result["nurse_model_labor_saved"] == approx(120)
+    assert result["nurse_model_denial_value_lost"] == approx(1000)
+    assert result["nurse_model_incremental_value"] == approx(-880)
 
 
 def test_no_op_rn_model_perfect_md_model_conditions_human_md_queue():
@@ -161,9 +179,9 @@ def test_intermediate_models_condition_each_downstream_queue():
     assert result["missed_md_model"] == approx(4.8)
     assert result["missed_denials"] == approx(16.8)
     assert result["nurse_model_autoapproved"] == approx(228)
-    assert result["nurse_model_labor_saved"] == approx(4560)
+    assert result["nurse_model_labor_saved"] == approx(11160)
     assert result["nurse_model_denial_value_lost"] == approx(12000)
-    assert result["nurse_model_incremental_value"] == approx(-7440)
+    assert result["nurse_model_incremental_value"] == approx(-840)
     assert result["md_model_autoapproved"] == approx(9.6)
     assert result["md_model_labor_saved"] == approx(960)
     assert result["md_model_denial_value_lost"] == approx(4800)
@@ -201,6 +219,40 @@ def test_model_sensitivity_one_never_misses_inappropriate_cases():
     assert result["nurse_model_falseapproved_inappropriate"] == approx(0)
     assert result["md_model_falseapproved_inappropriate"] == approx(0)
     assert result["missed_denials"] == approx(0)
+
+
+def test_perfect_md_model_after_perfect_rn_model_has_no_avoidable_md_reviews():
+    result = simulate_model_workflow(
+        BaseInputs(),
+        ModelInputs(
+            nurse_model_sensitivity=1.0,
+            nurse_model_specificity=1.0,
+            md_model_sensitivity=1.0,
+            md_model_specificity=1.0,
+        ),
+    )
+    assert result["md_queue_appropriate"] == approx(0)
+    assert result["md_queue_inappropriate"] == approx(60)
+    assert result["md_model_autoapproved"] == approx(0)
+    assert result["md_model_labor_saved"] == approx(0)
+    assert result["md_model_denial_value_lost"] == approx(0)
+    assert result["md_model_incremental_value"] == approx(0)
+
+
+def test_model_review_cost_savings_match_baseline_review_cost_reduction():
+    base = BaseInputs()
+    baseline = simulate_current_workflow(base)
+    result = simulate_model_workflow(
+        base,
+        ModelInputs(
+            nurse_model_sensitivity=0.8,
+            nurse_model_specificity=0.9,
+            md_model_sensitivity=0.9,
+            md_model_specificity=0.8,
+        ),
+    )
+    total_model_review_cost_saved = result["nurse_model_labor_saved"] + result["md_model_labor_saved"]
+    assert baseline["review_cost"] - result["review_cost"] == approx(total_model_review_cost_saved)
 
 
 def test_cases_are_conserved_at_every_branch():
